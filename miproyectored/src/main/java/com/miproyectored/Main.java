@@ -1,88 +1,113 @@
 package com.miproyectored;
 
+import com.miproyectored.export.CsvExporter; // Nueva importación
+import com.miproyectored.export.HtmlExporter; // Nueva importación
+import com.miproyectored.export.JsonExporter;
+import com.miproyectored.inventory.InventoryManager;
 import com.miproyectored.model.Device;
 import com.miproyectored.model.NetworkReport;
 import com.miproyectored.scanner.NmapScanner;
+import com.miproyectored.util.DataNormalizer;
 import com.miproyectored.util.NetworkUtils;
-// Asegúrate de crear estas clases e importarlas correctamente
-// import com.miproyectored.inventory.InventoryManager; // Aún no lo usamos
-import com.miproyectored.export.JsonExporter; // <--- AÑADIR ESTA IMPORTACIÓN
-
-import java.util.ArrayList; // Para el fallback
+import java.io.File; // Nueva importación
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
-import java.util.Date; // Para new java.util.Date
 
 public class Main {
+
+    private static final String REPORTS_DIR = "reports"; // Directorio para los reportes
 
     public static void main(String[] args) {
         System.out.println("Iniciando MiProyectoRed...");
 
+        // Crear directorio de reportes si no existe
+        File reportsDir = new File(REPORTS_DIR);
+        if (!reportsDir.exists()) {
+            if (reportsDir.mkdirs()) {
+                System.out.println("Directorio de reportes creado en: " + reportsDir.getAbsolutePath());
+            } else {
+                System.err.println("No se pudo crear el directorio de reportes: " + reportsDir.getAbsolutePath());
+                // Considerar si continuar o salir si el directorio es crucial
+            }
+        }
+
+
         // 1. Instanciar componentes principales
-        NmapScanner scanner = new NmapScanner();
-        // InventoryManager inventoryManager = new InventoryManager(); // Descomenta cuando la clase exista
-        JsonExporter jsonExporter = new JsonExporter();             // <--- DESCOMENTAR E INSTANCIAR
+        NmapScanner scanner = new NmapScanner(); 
+        JsonExporter jsonExporter = new JsonExporter();
+        CsvExporter csvExporter = new CsvExporter(); // Nuevo
+        HtmlExporter htmlExporter = new HtmlExporter(); // Nuevo
+        InventoryManager inventoryManager = new InventoryManager();
+        DataNormalizer dataNormalizer = new DataNormalizer(); 
 
         // 2. Detectar redes locales para escanear
         List<String> networksToScan = NetworkUtils.detectLocalNetworks();
 
         if (networksToScan == null || networksToScan.isEmpty()) {
             System.out.println("No se pudieron detectar redes locales automáticamente.");
-            // Fallback: escanear solo la máquina local o una red predeterminada
-            networksToScan = new ArrayList<>(); // Inicializar para evitar NullPointerException
-            networksToScan.add("localhost"); // O tu red por defecto como "10.0.0.0/24"
+            networksToScan = new ArrayList<>();
+            networksToScan.add("scanme.nmap.org"); 
             System.out.println("Se escaneará '" + networksToScan.get(0) + "' como objetivo por defecto.");
-            // System.out.println("No hay redes para escanear. Finalizando.");
-            // return; // Decide si quieres terminar o usar el fallback
         }
 
         System.out.println("Se escanearán las siguientes redes/objetivos: " + networksToScan);
-
-        int reportCounter = 1; // Para nombres de archivo únicos si hay múltiples reportes
+        int reportFileCounter = 1; 
 
         for (String targetNetwork : networksToScan) {
             System.out.println("\n========================================================");
             System.out.println("Iniciando escaneo para el objetivo: " + targetNetwork);
             System.out.println("========================================================");
 
-            // 3. Ejecutar el escaneo para el objetivo actual
             List<Device> detectedDevices = scanner.scan(targetNetwork);
 
-            // 4. Crear y poblar el NetworkReport
             NetworkReport report = new NetworkReport();
             report.setScannedNetworkTarget(targetNetwork);
-            // Podrías obtener la versión de Nmap del scanner si la expone,
-            // o directamente del XML si modificas el POJO NmapRun para capturarla.
-            // report.setScanEngineInfo(scanner.getNmapVersion()); // Suponiendo que NmapScanner expone la versión
+            // El timestamp se establece automáticamente en el constructor de NetworkReport
+            // report.setScanEngineInfo(scanner.getNmapVersion()); // Si NmapScanner proveyera esta info
 
             if (detectedDevices != null) {
                 for (Device device : detectedDevices) {
+                    // El nivel de riesgo y la normalización ya se aplicaron en NmapScanner
                     report.addDevice(device);
                 }
             }
 
-            // 5. Guardar el reporte usando InventoryManager (cuando esté implementado)
-            // System.out.println("\n--- Guardando Reporte en Inventario ---");
-            // inventoryManager.saveReport(report);
-            // System.out.println("Reporte para " + targetNetwork + " guardado.");
+            System.out.println("\n--- Guardando Reporte en Base de Datos ---");
+            long reportId = inventoryManager.saveReport(report); 
+            if (reportId != -1) {
+                System.out.println("Reporte para " + targetNetwork + " guardado en BD con ID: " + reportId);
+            } else {
+                System.err.println("Fallo al guardar el reporte para " + targetNetwork + " en la BD.");
+            }
 
-            // 6. Exportar el reporte a JSON
-            System.out.println("\n--- Exportando Reporte a JSON ---");
-            String jsonReportString = jsonExporter.exportReportToJsonString(report); // <--- OBTENER JSON COMO STRING
-            System.out.println("Contenido JSON del Reporte para " + targetNetwork + ":");
-            System.out.println(jsonReportString); // <--- MOSTRAR JSON EN CONSOLA
-
-            // Opcional: Guardar el reporte JSON en un archivo
-            // Crear un nombre de archivo descriptivo. Reemplazar caracteres no válidos para nombres de archivo.
+            // Preparar nombre base para los archivos de reporte
             String safeTargetNetworkName = targetNetwork.replaceAll("[^a-zA-Z0-9.-]", "_");
-            String reportFileName = "reporte_escaneo_" + safeTargetNetworkName + "_" + reportCounter + ".json";
-            jsonExporter.exportReportToFile(report, reportFileName); // <--- GUARDAR JSON EN ARCHIVO
-            reportCounter++;
+            String baseReportFileName = "reporte_escaneo_" + safeTargetNetworkName + "_" + reportFileCounter;
 
+            // Exportar a JSON
+            System.out.println("\n--- Exportando Reporte a Archivo JSON ---");
+            String jsonReportFileName = REPORTS_DIR + File.separator + baseReportFileName + ".json";
+            jsonExporter.exportReportToFile(report, jsonReportFileName);
+            // System.out.println("Reporte JSON exportado a: " + jsonReportFileName); // Mensaje ya en JsonExporter
 
-            // 7. Mostrar los resultados del reporte actual en consola (resumen)
+            // Exportar a CSV
+            System.out.println("\n--- Exportando Reporte a Archivo CSV ---");
+            String csvReportFileName = REPORTS_DIR + File.separator + baseReportFileName + ".csv";
+            csvExporter.exportReportToFile(report, csvReportFileName);
+            // System.out.println("Reporte CSV exportado a: " + csvReportFileName); // Mensaje ya en CsvExporter
+
+            // Exportar a HTML
+            System.out.println("\n--- Exportando Reporte a Archivo HTML ---");
+            String htmlReportFileName = REPORTS_DIR + File.separator + baseReportFileName + ".html";
+            htmlExporter.exportReportToFile(report, htmlReportFileName);
+            // System.out.println("Reporte HTML exportado a: " + htmlReportFileName); // Mensaje ya en HtmlExporter
+            
+            reportFileCounter++;
+
             System.out.println("\n--- Reporte del Escaneo para: " + report.getScannedNetworkTarget() + " ---");
-            System.out.println("Fecha del escaneo: " + new Date(report.getScanTimestamp()));
+            // Usar DataNormalizer para formatear la fecha
+            System.out.println("Fecha del escaneo: " + dataNormalizer.formatTimestamp(report.getScanTimestamp()));
             System.out.println("Objetivo: " + report.getScannedNetworkTarget());
             System.out.println("Dispositivos encontrados: " + report.getDeviceCount());
 
@@ -91,28 +116,34 @@ public class Main {
                 for (Device device : report.getDevices()) {
                     System.out.println("------------------------------------");
                     System.out.println("  IP: " + device.getIp());
-                    if (device.getHostname() != null && !device.getHostname().isEmpty()) {
+                    // Los datos ya vienen normalizados desde NmapScanner
+                    if (device.getHostname() != null && !device.getHostname().isEmpty() && !device.getHostname().equals(device.getIp().toLowerCase()) && !device.getHostname().equals("unknown")) {
                         System.out.println("  Hostname: " + device.getHostname());
                     }
-                    if (device.getMac() != null && !device.getMac().isEmpty()) {
-                        System.out.println("  MAC: " + device.getMac() +
-                                           (device.getManufacturer() != null ? " (" + device.getManufacturer() + ")" : ""));
+                    if (device.getMac() != null && !device.getMac().isEmpty() && !device.getMac().equals("UNKNOWN")) {
+                        System.out.print("  MAC: " + device.getMac());
+                        if (device.getManufacturer() != null && !device.getManufacturer().isEmpty() && !device.getManufacturer().equals("unknown")) {
+                            System.out.print(" (" + device.getManufacturer() + ")");
+                        }
+                        System.out.println();
                     }
-                    if (device.getOs() != null && !device.getOs().isEmpty()) {
+                    if (device.getOs() != null && !device.getOs().isEmpty() && !device.getOs().equals("unknown")) {
                         System.out.println("  OS: " + device.getOs());
                     }
                     if (device.getOpenPorts() != null && !device.getOpenPorts().isEmpty()) {
-                        System.out.println("  Puertos abiertos: " + device.getOpenPorts());
+                        System.out.println("  Puertos abiertos: " + device.getOpenPorts().size() + " " + device.getOpenPorts());
                         if (device.getServices() != null && !device.getServices().isEmpty()) {
                             System.out.println("  Servicios detectados: ");
                             for (Map.Entry<Integer, String> entry : device.getServices().entrySet()) {
-                                System.out.println("    - Puerto " + entry.getKey() + ": " + entry.getValue());
+                                System.out.println("    - Puerto " + entry.getKey() + "/tcp: " + entry.getValue());
                             }
-                        } else {
-                             System.out.println("  No se detectaron servicios detallados para los puertos abiertos.");
                         }
                     } else {
                         System.out.println("  No se detectaron puertos abiertos.");
+                    }
+                    // Mostrar el nivel de riesgo
+                    if (device.getRiskLevel() != null && !device.getRiskLevel().isEmpty()){
+                        System.out.println("  Nivel de Riesgo: " + device.getRiskLevel().toUpperCase()); // Mostrar en mayúsculas para destacar
                     }
                 }
                 System.out.println("------------------------------------");
@@ -124,10 +155,7 @@ public class Main {
 
         System.out.println("\n========================================================");
         System.out.println("Todos los escaneos han finalizado.");
+        System.out.println("Se ha generado la base de datos 'network_inventory.db' en el directorio del proyecto.");
         System.out.println("========================================================");
-
-        // Próximos pasos podrían incluir:
-        // - Implementar InventoryManager para persistencia real (BD, archivos).
-        // - Implementar RiskAnalyzer.
     }
 }

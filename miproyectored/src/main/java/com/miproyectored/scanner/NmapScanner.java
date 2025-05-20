@@ -8,6 +8,9 @@ import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlElementWrapper;
 import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlProperty;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 
+import com.miproyectored.util.DataNormalizer;
+import com.miproyectored.risk.RiskAnalyzer; // <--- AÑADIR IMPORTACIÓN
+
 import java.io.BufferedReader;
 import java.io.InputStreamReader;
 import java.util.ArrayList;
@@ -18,22 +21,27 @@ import java.util.HashMap;
 public class NmapScanner {
 
     private String nmapPath;
-
-    public NmapScanner(String nmapPath) {
-        this.nmapPath = nmapPath;
-        if (!isNmapAvailable(this.nmapPath)) {
-            System.err.println("Nmap no parece ser ejecutable en la ruta especificada: " + this.nmapPath);
-            // Considera lanzar una excepción aquí para manejo de errores más robusto
-        }
-    }
+    private final DataNormalizer dataNormalizer; 
+    // No necesitamos una instancia de RiskAnalyzer si el método es estático
 
     public NmapScanner() {
         this.nmapPath = findNmapPath();
+        this.dataNormalizer = new DataNormalizer(); 
         if (this.nmapPath == null) {
             System.err.println("Nmap no encontrado en el PATH del sistema ni en ubicaciones comunes. " +
                                "Por favor, instala Nmap y asegúrate de que esté en el PATH, " +
                                "o proporciona la ruta explícitamente al constructor de NmapScanner.");
             // Considera lanzar una excepción
+        }
+    }
+
+    // Constructor para pasar la ruta de Nmap explícitamente (opcional)
+    public NmapScanner(String nmapPath) {
+        this.nmapPath = nmapPath;
+        this.dataNormalizer = new DataNormalizer(); 
+        if (!isNmapAvailable(this.nmapPath)) {
+             System.err.println("Nmap no parece estar disponible en la ruta especificada: " + nmapPath);
+             // Considera lanzar una excepción o manejar el error de otra forma
         }
     }
 
@@ -197,27 +205,26 @@ public class NmapScanner {
 
         try {
             XmlMapper xmlMapper = new XmlMapper();
-            // Deshabilitar características que podrían causar problemas con XML complejo o inesperado
-            // xmlMapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false); // Ya cubierto por @JsonIgnoreProperties
+            // xmlMapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
             NmapRun nmapRun = xmlMapper.readValue(xmlData, NmapRun.class);
 
             if (nmapRun != null && nmapRun.hosts != null) {
                 for (NmapHost nmapHost : nmapRun.hosts) {
                     if (nmapHost.status == null || !"up".equalsIgnoreCase(nmapHost.status.state)) {
-                        continue; // Solo procesar hosts que están "up"
+                        continue; 
                     }
 
                     String ipAddress = null;
-                    String macAddress = null;
-                    String manufacturer = null;
+                    String rawMacAddress = null; // Cambiado para normalizar después
+                    String rawManufacturer = null; // Cambiado para normalizar después
 
                     if (nmapHost.addresses != null) {
                         for (NmapAddress addr : nmapHost.addresses) {
                             if ("ipv4".equalsIgnoreCase(addr.addrtype)) {
                                 ipAddress = addr.addr;
                             } else if ("mac".equalsIgnoreCase(addr.addrtype)) {
-                                macAddress = addr.addr;
-                                manufacturer = addr.vendor;
+                                rawMacAddress = addr.addr;
+                                rawManufacturer = addr.vendor;
                             }
                         }
                     }
@@ -227,22 +234,28 @@ public class NmapScanner {
                         continue; 
                     }
 
-                    Device device = new Device(ipAddress);
-                    if (macAddress != null) {
-                        device.setMac(macAddress.toUpperCase());
-                        if (manufacturer != null && !manufacturer.isEmpty()) {
-                            device.setManufacturer(manufacturer);
-                        }
-                    }
+                    Device device = new Device(ipAddress); // IP ya es única, no necesita normalización de case
+
+                    // Normalizar y establecer MAC y Fabricante
+                    device.setMac(dataNormalizer.normalizeMacAddress(rawMacAddress));
+                    device.setManufacturer(dataNormalizer.normalizeString(rawManufacturer));
+
 
                     if (nmapHost.hostnames != null && nmapHost.hostnames.hostnames != null) {
+                        String bestHostname = null;
                         for (NmapHostname hn : nmapHost.hostnames.hostnames) {
                             if ("PTR".equalsIgnoreCase(hn.type) || "user".equalsIgnoreCase(hn.type) || hn.type == null) { 
-                                // "user" es a veces el tipo para nombres de host resueltos, PTR es el más común.
-                                device.setHostname(hn.name);
+                                bestHostname = hn.name;
                                 break; 
                             }
                         }
+                        // Si no se encontró PTR o user, tomar el primero disponible
+                        if (bestHostname == null && !nmapHost.hostnames.hostnames.isEmpty()) {
+                            bestHostname = nmapHost.hostnames.hostnames.get(0).name;
+                        }
+                        device.setHostname(dataNormalizer.normalizeString(bestHostname));
+                    } else {
+                        device.setHostname(dataNormalizer.normalizeString(ipAddress)); // Fallback al IP si no hay hostname
                     }
                     
                     if (nmapHost.ports != null && nmapHost.ports.ports != null) {
@@ -251,20 +264,21 @@ public class NmapScanner {
                         for (NmapPort nmapPort : nmapHost.ports.ports) {
                             if (nmapPort.state != null && "open".equalsIgnoreCase(nmapPort.state.state)) {
                                 try {
-                                    // La siguiente línea convierte el 'portid' (String) a 'int'.
-                                    // Esta es la forma correcta de hacerlo.
                                     int portId = Integer.parseInt(nmapPort.portid); 
                                     openPorts.add(portId);
+                                    
+                                    StringBuilder serviceDescBuilder = new StringBuilder();
                                     if (nmapPort.service != null) {
-                                        StringBuilder serviceDesc = new StringBuilder(nmapPort.service.name != null ? nmapPort.service.name : "unknown");
-                                        if (nmapPort.service.product != null) serviceDesc.append(" (").append(nmapPort.service.product);
-                                        if (nmapPort.service.version != null) serviceDesc.append(" ").append(nmapPort.service.version);
-                                        if (nmapPort.service.extrainfo != null) serviceDesc.append(" ").append(nmapPort.service.extrainfo);
-                                        if (nmapPort.service.product != null) serviceDesc.append(")");
-                                        services.put(portId, serviceDesc.toString().trim());
-                                    } else {
-                                        services.put(portId, "Unknown service");
+                                        serviceDescBuilder.append(nmapPort.service.name != null ? nmapPort.service.name : "");
+                                        if (nmapPort.service.product != null) serviceDescBuilder.append(" (").append(nmapPort.service.product);
+                                        if (nmapPort.service.version != null) serviceDescBuilder.append(" ").append(nmapPort.service.version);
+                                        if (nmapPort.service.extrainfo != null) serviceDescBuilder.append(" ").append(nmapPort.service.extrainfo);
+                                        if (nmapPort.service.product != null) serviceDescBuilder.append(")");
                                     }
+                                    // Normalizar la descripción del servicio
+                                    String normalizedServiceDesc = dataNormalizer.normalizeString(serviceDescBuilder.toString().trim());
+                                    services.put(portId, normalizedServiceDesc.isEmpty() ? "unknown service" : normalizedServiceDesc);
+
                                 } catch (NumberFormatException e) {
                                     System.err.println("Error parseando portid: " + nmapPort.portid + " para IP: " + ipAddress);
                                 }
@@ -275,26 +289,31 @@ public class NmapScanner {
                     }
 
                     if (nmapHost.os != null && nmapHost.os.osmatches != null && !nmapHost.os.osmatches.isEmpty()) {
-                        NmapOsMatch bestOsMatch = nmapHost.os.osmatches.get(0); // Tomar la primera por defecto
-                        // Opcionalmente, buscar la de mayor "accuracy" si hay varias
+                        NmapOsMatch bestOsMatch = nmapHost.os.osmatches.get(0); 
+                        // Opcional: buscar la de mayor "accuracy"
                         // for (NmapOsMatch match : nmapHost.os.osmatches) {
-                        //    if (Integer.parseInt(match.accuracy) > Integer.parseInt(bestOsMatch.accuracy)) {
+                        //    if (match.accuracy != null && bestOsMatch.accuracy != null &&
+                        //        Integer.parseInt(match.accuracy) > Integer.parseInt(bestOsMatch.accuracy)) {
                         //        bestOsMatch = match;
                         //    }
                         // }
-                        device.setOs(bestOsMatch.name + " (Accuracy: " + bestOsMatch.accuracy + "%)");
+                        String osName = bestOsMatch.name + (bestOsMatch.accuracy != null ? " (Accuracy: " + bestOsMatch.accuracy + "%)" : "");
+                        device.setOs(dataNormalizer.normalizeString(osName));
+                    } else {
+                        device.setOs(dataNormalizer.normalizeString(null)); // Establecer OS como unknown si no se detecta
                     }
                     
+                    // Calcular y establecer el nivel de riesgo
+                    device.setRiskLevel(RiskAnalyzer.calculateRiskLevel(device));
+
                     devices.add(device);
-                    // System.out.println("Dispositivo parseado con Jackson: " + device.getIp()); // Para depuración
                 }
             } else {
                  System.out.println("NmapRun o nmapRun.hosts es nulo después del parseo XML.");
             }
         } catch (Exception e) {
             System.err.println("Error crítico parseando XML de Nmap con Jackson: " + e.getMessage());
-            // e.printStackTrace(); // Descomentar para traza completa durante el desarrollo
-            // Podrías considerar guardar el XML problemático para análisis
+            // e.printStackTrace(); 
             // System.err.println("XML problemático:\n" + xmlData);
         }
         return devices;

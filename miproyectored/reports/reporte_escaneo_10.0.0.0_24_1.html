@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Reporte de Escaneo de Red</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; background-color: #f4f4f4; color: #333; }
+        .container { background-color: #fff; padding: 20px; border-radius: 8px; box-shadow: 0 0 10px rgba(0,0,0,0.1); }
+        h1, h2 { color: #333; }
+        table { width: 100%; border-collapse: collapse; margin-top: 20px; }
+        th, td { border: 1px solid #ddd; padding: 10px; text-align: left; }
+        th { background-color: #007bff; color: white; }
+        tr:nth-child(even) { background-color: #f2f2f2; }
+        .device-details { margin-bottom: 30px; }
+        .summary p { margin: 5px 0; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Reporte de Escaneo de Red</h1>
+        <div class="summary">
+            <p><strong>Objetivo del Escaneo:</strong> 10.0.0.0/24</p>
+            <p><strong>Fecha del Escaneo:</strong> 2025-05-20 10:08:52 UTC</p>
+            <p><strong>Dispositivos Encontrados:</strong> 2</p>
+        </div>
+        <h2>Detalles de los Dispositivos</h2>
+        <table>
+            <thead>
+                <tr>
+                    <th>IP</th>
+                    <th>Hostname</th>
+                    <th>MAC</th>
+                    <th>Fabricante</th>
+                    <th>OS</th>
+                    <th>Puertos Abiertos</th>
+                    <th>Servicios</th>
+                    <th>Nivel de Riesgo</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td>10.0.0.1</td>
+                    <td>10.0.0.1</td>
+                    <td>12:34:56:78:9A:BC</td>
+                    <td>unknown</td>
+                    <td>unknown</td>
+                    <td>N/A</td>
+                    <td>N/A</td>
+                    <td>medium</td>
+                </tr>
+                <tr>
+                    <td>10.0.0.4</td>
+                    <td>practicacesar.internal.cloudapp.net</td>
+                    <td>unknown</td>
+                    <td>unknown</td>
+                    <td>microsoft windows server 2019 (accuracy: 100%)</td>
+                    <td>135, 139, 445, 1433, 3389, 5985</td>
+                    <td>Puerto 5985: http (microsoft httpapi httpd 2.0 ssdp/upnp)<br>Puerto 135: msrpc (microsoft windows rpc)<br>Puerto 1433: tcpwrapped<br>Puerto 139: netbios-ssn (microsoft windows netbios-ssn)<br>Puerto 445: microsoft-ds<br>Puerto 3389: ms-wbt-server (microsoft terminal services)</td>
+                    <td>high</td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+</body>
+</html>

@@ -15,41 +15,26 @@
     </properties>
 
     <dependencies>
-        <!-- Jackson para JSON -->
+        <!-- Jackson para JSON (databind incluye core y annotations) -->
         <dependency>
             <groupId>com.fasterxml.jackson.core</groupId>
             <artifactId>jackson-databind</artifactId>
-            <version>2.15.2</version> <!-- Puedes usar la versión que tenías o la 2.15.0 que mencionaste -->
+            <version>2.15.2</version>
         </dependency>
 
-        <!-- SQLite JDBC -->
+        <!-- Jackson para parsear XML (necesario para Nmap) -->
+        <dependency>
+            <groupId>com.fasterxml.jackson.dataformat</groupId>
+            <artifactId>jackson-dataformat-xml</artifactId>
+            <version>2.15.2</version>
+        </dependency>
+
+        <!-- SQLite JDBC Driver -->
         <dependency>
             <groupId>org.xerial</groupId>
             <artifactId>sqlite-jdbc</artifactId>
-            <version>3.42.0.0</version>
+            <version>3.45.1.0</version> <!-- O la versión más reciente que estés utilizando -->
         </dependency>
-
-        <!-- En tu pom.xml, dentro de <dependencies> -->
-<dependency>
-    <groupId>com.fasterxml.jackson.dataformat</groupId>
-    <artifactId>jackson-dataformat-xml</artifactId>
-    <version>2.15.2</version> <!-- O la versión más reciente compatible con tu versión de Jackson Core -->
-</dependency>
-
-        <!-- Si decides usar JGraphX o GraphStream para la topología, añádelos aquí -->
-        <!-- Ejemplo para GraphStream -->
-        <!--
-        <dependency>
-            <groupId>org.graphstream</groupId>
-            <artifactId>gs-core</artifactId>
-            <version>2.0</version>
-        </dependency>
-        <dependency>
-            <groupId>org.graphstream</groupId>
-            <artifactId>gs-ui-swing</artifactId>
-            <version>2.0</version>
-        </dependency>
-        -->
     </dependencies>
 
     <build>
@@ -57,30 +42,31 @@
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-compiler-plugin</artifactId>
-                <version>3.8.1</version>
+                <version>3.8.1</version> <!-- Puedes considerar actualizar a 3.11.0 o similar si no hay problemas -->
                 <configuration>
                     <source>${maven.compiler.source}</source>
                     <target>${maven.compiler.target}</target>
                 </configuration>
             </plugin>
             <plugin>
+                <!-- Plugin para crear un JAR ejecutable con todas las dependencias -->
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-assembly-plugin</artifactId>
-                <version>3.3.0</version>
+                <version>3.3.0</version> <!-- Puedes considerar actualizar a una versión más reciente como 3.6.0 -->
                 <configuration>
                     <descriptorRefs>
                         <descriptorRef>jar-with-dependencies</descriptorRef>
                     </descriptorRefs>
                     <archive>
                         <manifest>
-                            <mainClass>com.miproyectored.Main</mainClass>
+                            <mainClass>com.miproyectored.Main</mainClass> <!-- Asegúrate que esta es tu clase Main -->
                         </manifest>
                     </archive>
                 </configuration>
                 <executions>
                     <execution>
-                        <id>make-assembly</id>
-                        <phase>package</phase>
+                        <id>make-assembly</id> <!-- this is used for inheritance merges -->
+                        <phase>package</phase> <!-- bind to the packaging phase -->
                         <goals>
                             <goal>single</goal>
                         </goals>
@@ -88,9 +74,10 @@
                 </executions>
             </plugin>
             <plugin>
+                <!-- Opcional: Plugin para ejecutar la aplicación directamente con Maven -->
                 <groupId>org.codehaus.mojo</groupId>
                 <artifactId>exec-maven-plugin</artifactId>
-                <version>3.1.0</version>
+                <version>3.1.0</version> <!-- Puedes considerar actualizar a 3.2.0 o similar -->
                 <configuration>
                     <mainClass>com.miproyectored.Main</mainClass>
                 </configuration>
