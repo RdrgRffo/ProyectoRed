@@ -4,6 +4,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.ArrayList;
 import java.util.HashMap;
+import com.miproyectored.util.MacManufacturerManager;  // Añadir esta línea
 
 public class Device {
     private String ip;                     // Dirección IP del dispositivo
@@ -14,7 +15,8 @@ public class Device {
     private String manufacturer;           // Fabricante (basado en la MAC, opcional)
     private String os;                     // Sistema operativo detectado (opcional)
     private String riskLevel;              // Nivel de riesgo ("low", "medium", "high")
-
+    private Map<String, String> snmpInfo = new HashMap<>();
+    
     // Constructor
     public Device(String ip) {
         this.ip = ip;
@@ -75,11 +77,20 @@ public class Device {
     }
 
     public void setMac(String mac) {
-        this.mac = mac;
+        setMacAndManufacturer(mac);
     }
 
     public void setManufacturer(String manufacturer) {
         this.manufacturer = manufacturer;
+    }
+
+    // Cambiar de private a public
+    public void setMacAndManufacturer(String mac) {
+        this.mac = mac;
+        if (mac != null && !mac.trim().isEmpty()) {
+            MacManufacturerManager macManager = new MacManufacturerManager();
+            this.manufacturer = macManager.getManufacturer(mac);
+        }
     }
 
     public void setOs(String os) {
@@ -101,6 +112,15 @@ public class Device {
                ", mac='" + mac + '\'' +
                ", os='" + os + '\'' +
                ", riskLevel='" + riskLevel + '\'' +
+               ", snmpInfo=" + snmpInfo +
                '}';
+    }
+    
+    public void addSnmpInfo(String key, String value) {
+        snmpInfo.put(key, value);
+    }
+    
+    public Map<String, String> getSnmpInfo() {
+        return snmpInfo;
     }
 }

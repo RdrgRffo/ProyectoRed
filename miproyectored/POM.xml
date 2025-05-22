@@ -35,6 +35,21 @@
             <artifactId>sqlite-jdbc</artifactId>
             <version>3.45.1.0</version> <!-- O la versión más reciente que estés utilizando -->
         </dependency>
+        <dependency>
+            <groupId>org.openjfx</groupId>
+            <artifactId>javafx-controls</artifactId>
+            <version>17.0.6</version> <!-- Usa la versión de JavaFX que corresponda a tu JDK -->
+        </dependency>
+        <dependency>
+            <groupId>org.openjfx</groupId>
+            <artifactId>javafx-fxml</artifactId>
+            <version>17.0.6</version> <!-- Usa la versión de JavaFX que corresponda a tu JDK -->
+        </dependency>
+        <dependency>
+            <groupId>org.snmp4j</groupId>
+            <artifactId>snmp4j</artifactId>
+            <version>3.6.6</version>
+        </dependency>
     </dependencies>
 
     <build>
@@ -80,6 +95,14 @@
                 <version>3.1.0</version> <!-- Puedes considerar actualizar a 3.2.0 o similar -->
                 <configuration>
                     <mainClass>com.miproyectored.Main</mainClass>
+                </configuration>
+            </plugin>
+            <plugin>
+                <groupId>org.openjfx</groupId>
+                <artifactId>javafx-maven-plugin</artifactId>
+                <version>0.0.8</version> <!-- O la versión más reciente -->
+                <configuration>
+                    <mainClass>com.miproyectored.Main</mainClass> <!-- Asegúrate que esta es tu clase Main con el método start -->
                 </configuration>
             </plugin>
         </plugins>

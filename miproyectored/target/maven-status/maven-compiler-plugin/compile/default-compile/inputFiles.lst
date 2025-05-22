@@ -1,11 +1,14 @@
 C:\Users\Administrador\Desktop\miproyectored\src\main\java\com\miproyectored\util\DataNormalizer.java
-C:\Users\Administrador\Desktop\miproyectored\src\main\java\com\miproyectored\Main.java
 C:\Users\Administrador\Desktop\miproyectored\src\main\java\com\miproyectored\risk\RiskAnalyzer.java
 C:\Users\Administrador\Desktop\miproyectored\src\main\java\com\miproyectored\scanner\NmapScanner.java
-C:\Users\Administrador\Desktop\miproyectored\src\main\java\com\miproyectored\export\CsvExporter.java
 C:\Users\Administrador\Desktop\miproyectored\src\main\java\com\miproyectored\export\HtmlExporter.java
 C:\Users\Administrador\Desktop\miproyectored\src\main\java\com\miproyectored\inventory\InventoryManager.java
 C:\Users\Administrador\Desktop\miproyectored\src\main\java\com\miproyectored\model\NetworkReport.java
 C:\Users\Administrador\Desktop\miproyectored\src\main\java\com\miproyectored\util\NetworkUtils.java
 C:\Users\Administrador\Desktop\miproyectored\src\main\java\com\miproyectored\export\JsonExporter.java
 C:\Users\Administrador\Desktop\miproyectored\src\main\java\com\miproyectored\model\Device.java
+C:\Users\Administrador\Desktop\miproyectored\src\main\java\com\miproyectored\scanner\SnmpScanner.java
+C:\Users\Administrador\Desktop\miproyectored\src\main\java\com\miproyectored\Main.java
+C:\Users\Administrador\Desktop\miproyectored\src\main\java\com\miproyectored\util\MacManufacturerManager.java
+C:\Users\Administrador\Desktop\miproyectored\src\main\java\com\miproyectored\export\CsvExporter.java
+C:\Users\Administrador\Desktop\miproyectored\src\main\java\com\miproyectored\controller\DashboardController.java

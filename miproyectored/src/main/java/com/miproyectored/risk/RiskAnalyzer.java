@@ -58,18 +58,18 @@ public class RiskAnalyzer {
         }
 
         if (criticalServices > 0) {
-            return "high";
+            return "alto";
         }
         if (openPortsCount > 10 || (openPortsCount > 5 && hasPotentiallyRiskyService)) {
-            return "high";
+            return "alto";
         }
         if (openPortsCount > 3 || hasPotentiallyRiskyService || os.equals(DataNormalizer.DEFAULT_UNKNOWN) || os.contains("windows xp") || os.contains("windows server 2003")) {
-            return "medium";
+            return "medio";
         }
         if (openPortsCount > 0) {
-            return "low";
+            return "bajo";
         }
 
-        return "low"; // Por defecto, si no hay puertos abiertos o información.
+        return "bajo"; // Por defecto, si no hay puertos abiertos o información.
     }
 }

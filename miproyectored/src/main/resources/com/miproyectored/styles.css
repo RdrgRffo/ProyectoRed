@@ -1,0 +1,197 @@
+/* Estilo base para el panel raíz con degradado diagonal */
+.root-pane {
+    -fx-background-color: #FFFFFF; /* Fondo blanco */
+    -fx-font-family: "Segoe UI", Arial, sans-serif; /* Fuente más moderna */
+}
+
+/* Estilo para el título principal */
+.main-title {
+    -fx-font-size: 28px; /* Tamaño de fuente más grande */
+    -fx-font-weight: bold;
+    -fx-text-fill: black; /* Color de texto para contraste con fondo oscuro inicial */
+    -fx-effect: dropshadow(gaussian, rgba(61, 61, 61, 0.3), 5, 0.2, 2, 2);
+}
+
+/* Estilos para etiquetas de información y títulos de sección */
+.info-label {
+    -fx-font-size: 14px;
+    -fx-text-fill: #000000; /* Un gris claro para texto secundario en la parte superior */
+}
+.info-value {
+    -fx-font-size: 14px;
+    -fx-font-weight: bold;
+    -fx-text-fill: rgb(0, 0, 0);
+}
+
+.section-title {
+    -fx-font-size: 18px;
+    -fx-font-weight: bold;
+    -fx-text-fill: #333333; /* Color oscuro para contraste en la parte central más clara */
+    -fx-padding: 10px 0 5px 0;
+}
+
+/* Estilo para botones de acción principales */
+.action-button {
+    -fx-background-color: #007bff; /* Azul moderno */
+    -fx-text-fill: white;
+    -fx-font-size: 14px;
+    -fx-font-weight: bold;
+    -fx-padding: 8px 15px;
+    -fx-background-radius: 5px; /* Bordes redondeados */
+    -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.2), 3, 0.1, 1, 1);
+}
+.action-button:hover {
+    -fx-background-color: #0056b3; /* Azul más oscuro al pasar el ratón */
+}
+.action-button:pressed {
+    -fx-background-color: #004085;
+}
+
+/* Estilo para botones secundarios */
+.secondary-button {
+    -fx-background-color: #6c757d; /* Gris moderno */
+    -fx-text-fill: white;
+    -fx-font-size: 13px;
+    -fx-padding: 6px 12px;
+    -fx-background-radius: 5px;
+    -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.15), 2, 0.1, 1, 1);
+}
+.secondary-button:hover {
+    -fx-background-color: #5a6268;
+}
+.secondary-button:pressed {
+    -fx-background-color: #545b62;
+}
+
+
+/* Estilo para la barra de progreso */
+.progress-bar > .bar {
+    -fx-background-color: #28a745; /* Verde para progreso */
+    -fx-background-insets: 0;
+    -fx-padding: 0.3em; /* Ajusta el grosor de la barra */
+    -fx-background-radius: 3px;
+}
+.progress-bar > .track {
+    -fx-background-color: #e9ecef; /* Fondo claro para el track */
+    -fx-background-insets: 0;
+    -fx-background-radius: 3px;
+}
+
+
+/* Estilo para el área de texto */
+.text-area {
+    -fx-font-family: "Consolas", "Monaco", monospace;
+    -fx-font-size: 13px;
+    -fx-background-color: white;
+    -fx-border-color: #ced4da;
+    -fx-border-width: 1px;
+    -fx-border-radius: 3px;
+    -fx-background-radius: 3px;
+}
+.text-area .content {
+    -fx-background-color: white; /* Asegura que el fondo del contenido también sea blanco */
+}
+
+
+/* Estilo para la etiqueta de estado */
+.status-label {
+    -fx-font-size: 13px;
+    -fx-text-fill: #495057; /* Gris oscuro para el texto de estado */
+}
+
+/* Estilos para TabPane y Tabs para un look más contemporáneo */
+.tab-pane .tab-header-area .tab-header-background {
+    -fx-background-color: transparent; /* Quitar el fondo por defecto del header */
+}
+
+.tab-pane {
+    -fx-tab-min-width: 100px; /* Ancho mínimo de las pestañas */
+    -fx-tab-max-width: 200px;
+}
+
+.tab {
+    -fx-background-color: #f0f0f0; /* Color de fondo de las pestañas inactivas */
+    -fx-padding: 8px 15px;
+    -fx-background-insets: 0 1 0 0; /* Pequeña línea separadora */
+    -fx-background-radius: 5 5 0 0; /* Bordes superiores redondeados */
+    -fx-border-color: #cccccc;
+    -fx-border-width: 1 1 0 1; /* Borde alrededor excepto abajo */
+}
+
+.tab:selected {
+    -fx-background-color: white; /* La pestaña seleccionada es blanca (como el contenido) */
+    -fx-border-color: #cccccc;
+    -fx-border-width: 1 1 0 1; /* Mantiene el borde */
+}
+
+.tab:hover {
+    -fx-background-color: #e0e0e0; /* Color al pasar el ratón */
+}
+
+.tab .tab-label {
+    -fx-text-fill: #333333; /* Color del texto de la pestaña */
+    -fx-font-size: 13px;
+    -fx-font-weight: bold;
+}
+
+.tab-pane > .tab-content-area {
+    -fx-background-color: white; /* Fondo del área de contenido */
+    -fx-padding: 10px;
+    -fx-border-color: #cccccc;
+    -fx-border-width: 0 1 1 1; /* Borde alrededor del contenido */
+}
+
+/* Estilos para TableView */
+.table-view {
+    -fx-background-color: white;
+    -fx-border-color: #dee2e6;
+    -fx-border-radius: 3px;
+    -fx-background-radius: 3px;
+}
+
+.table-view .column-header-background {
+    -fx-background-color: #f8f9fa; /* Fondo claro para las cabeceras */
+}
+
+.table-view .column-header, .table-view .filler {
+    -fx-background-color: transparent;
+    -fx-border-color: transparent #dee2e6 transparent transparent; /* Línea divisoria vertical */
+    -fx-border-width: 0 1 0 0;
+    -fx-padding: 8px;
+}
+
+.table-view .column-header .label {
+    -fx-text-fill: #212529; /* Texto oscuro para cabeceras */
+    -fx-font-weight: bold;
+    -fx-font-size: 13px;
+}
+
+.table-view .table-cell {
+    -fx-padding: 8px;
+    -fx-border-color: transparent #e9ecef transparent transparent; /* Línea divisoria vertical más sutil para celdas */
+    -fx-border-width: 0 1 0 0;
+    -fx-font-size: 13px;
+}
+
+.table-view .table-row-cell:odd {
+    -fx-background-color: #f8f9fa; /* Color alterno para filas (opcional) */
+}
+.table-view .table-row-cell:selected {
+    -fx-background-color: #007bff; /* Color de selección */
+    -fx-text-fill: white;
+}
+.table-view .table-row-cell:selected .table-cell .text {
+     -fx-fill: white ; /* Asegura que el texto de la celda seleccionada sea blanco */
+}
+
+/* Contenedores VBox para espaciado y alineación */
+.header-box {
+    /* -fx-background-color: transparent; /* Para que se vea el degradado del root-pane */
+    /* El degradado del root-pane ya se ve, no es necesario hacerlo transparente a menos que tenga su propio fondo */
+}
+
+.content-box {
+    /* -fx-background-color: rgba(255, 255, 255, 0.8); /* Fondo ligeramente opaco para legibilidad si es necesario */
+    /* -fx-background-radius: 5px; */
+    /* -fx-padding: 15px; */
+}

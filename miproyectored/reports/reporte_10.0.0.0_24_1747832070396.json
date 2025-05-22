@@ -1,0 +1,34 @@
+{
+  "scanTimestamp" : 1747832070347,
+  "scannedNetworkTarget" : "10.0.0.0/24",
+  "devices" : [ {
+    "ip" : "10.0.0.1",
+    "hostname" : "10.0.0.1",
+    "openPorts" : [ ],
+    "services" : { },
+    "mac" : "12:34:56:78:9A:BC",
+    "manufacturer" : "Desconocido",
+    "os" : "so desconocido",
+    "riskLevel" : "bajo",
+    "snmpInfo" : { }
+  }, {
+    "ip" : "10.0.0.4",
+    "hostname" : "practicacesar.internal.cloudapp.net",
+    "openPorts" : [ 135, 139, 445, 1433, 3389, 5985 ],
+    "services" : {
+      "5985" : "http (microsoft httpapi httpd 2.0 ssdp/upnp)",
+      "135" : "msrpc (microsoft windows rpc)",
+      "1433" : "tcpwrapped",
+      "139" : "netbios-ssn (microsoft windows netbios-ssn)",
+      "445" : "microsoft-ds",
+      "3389" : "ms-wbt-server (microsoft terminal services)"
+    },
+    "mac" : "Desconocido",
+    "manufacturer" : "Formato MAC inválido",
+    "os" : "microsoft windows server 2019 (general purpose microsoft windows 2019)",
+    "riskLevel" : "alto",
+    "snmpInfo" : { }
+  } ],
+  "scanEngineInfo" : null,
+  "deviceCount" : 2
+}

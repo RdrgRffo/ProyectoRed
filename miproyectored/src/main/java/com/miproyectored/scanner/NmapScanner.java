@@ -17,6 +17,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.HashMap;
+import java.util.stream.Collectors; // <--- Añadir esta línea
 
 public class NmapScanner {
 
@@ -215,8 +216,8 @@ public class NmapScanner {
                     }
 
                     String ipAddress = null;
-                    String rawMacAddress = null; // Cambiado para normalizar después
-                    String rawManufacturer = null; // Cambiado para normalizar después
+                    String rawMacAddress = null; 
+                    String rawManufacturer = null; 
 
                     if (nmapHost.addresses != null) {
                         for (NmapAddress addr : nmapHost.addresses) {
@@ -234,12 +235,12 @@ public class NmapScanner {
                         continue; 
                     }
 
-                    Device device = new Device(ipAddress); // IP ya es única, no necesita normalización de case
-
-                    // Normalizar y establecer MAC y Fabricante
+                    Device device = new Device(ipAddress); 
                     device.setMac(dataNormalizer.normalizeMacAddress(rawMacAddress));
-                    device.setManufacturer(dataNormalizer.normalizeString(rawManufacturer));
-
+                    // device.setManufacturer(dataNormalizer.normalizeString(rawManufacturer)); // <-- LÍNEA ELIMINADA
+                    // El fabricante ahora se establece principalmente a través de setMac -> setMacAndManufacturer en la clase Device,
+                    // que utiliza MacManufacturerManager. Si rawManufacturer de Nmap es crucial,
+                    // la lógica en Device.setMacAndManufacturer podría necesitar ajustarse para considerarlo.
 
                     if (nmapHost.hostnames != null && nmapHost.hostnames.hostnames != null) {
                         String bestHostname = null;
@@ -249,13 +250,12 @@ public class NmapScanner {
                                 break; 
                             }
                         }
-                        // Si no se encontró PTR o user, tomar el primero disponible
                         if (bestHostname == null && !nmapHost.hostnames.hostnames.isEmpty()) {
                             bestHostname = nmapHost.hostnames.hostnames.get(0).name;
                         }
                         device.setHostname(dataNormalizer.normalizeString(bestHostname));
                     } else {
-                        device.setHostname(dataNormalizer.normalizeString(ipAddress)); // Fallback al IP si no hay hostname
+                        device.setHostname(dataNormalizer.normalizeString(ipAddress)); 
                     }
                     
                     if (nmapHost.ports != null && nmapHost.ports.ports != null) {
@@ -275,10 +275,8 @@ public class NmapScanner {
                                         if (nmapPort.service.extrainfo != null) serviceDescBuilder.append(" ").append(nmapPort.service.extrainfo);
                                         if (nmapPort.service.product != null) serviceDescBuilder.append(")");
                                     }
-                                    // Normalizar la descripción del servicio
                                     String normalizedServiceDesc = dataNormalizer.normalizeString(serviceDescBuilder.toString().trim());
                                     services.put(portId, normalizedServiceDesc.isEmpty() ? "unknown service" : normalizedServiceDesc);
-
                                 } catch (NumberFormatException e) {
                                     System.err.println("Error parseando portid: " + nmapPort.portid + " para IP: " + ipAddress);
                                 }
@@ -288,24 +286,41 @@ public class NmapScanner {
                         device.setServices(services);
                     }
 
-                    if (nmapHost.os != null && nmapHost.os.osmatches != null && !nmapHost.os.osmatches.isEmpty()) {
-                        NmapOsMatch bestOsMatch = nmapHost.os.osmatches.get(0); 
-                        // Opcional: buscar la de mayor "accuracy"
-                        // for (NmapOsMatch match : nmapHost.os.osmatches) {
-                        //    if (match.accuracy != null && bestOsMatch.accuracy != null &&
-                        //        Integer.parseInt(match.accuracy) > Integer.parseInt(bestOsMatch.accuracy)) {
-                        //        bestOsMatch = match;
-                        //    }
-                        // }
-                        String osName = bestOsMatch.name + (bestOsMatch.accuracy != null ? " (Accuracy: " + bestOsMatch.accuracy + "%)" : "");
-                        device.setOs(dataNormalizer.normalizeString(osName));
-                    } else {
-                        device.setOs(dataNormalizer.normalizeString(null)); // Establecer OS como unknown si no se detecta
-                    }
-                    
-                    // Calcular y establecer el nivel de riesgo
-                    device.setRiskLevel(RiskAnalyzer.calculateRiskLevel(device));
+                    // OS Detection
+                    String osDetails = "SO Desconocido"; // Valor por defecto si no hay información de OS
+                    if (nmapHost.os != null && nmapHost.os.osmatches != null && !nmapHost.os.osmatches.isEmpty()) { // Corregido: osmatches
+                        NmapOsMatch bestMatch = nmapHost.os.osmatches.stream() // Corregido: osmatches
+                            .filter(om -> om.accuracy != null && !om.accuracy.isEmpty()) 
+                            .max(java.util.Comparator.comparingInt(om -> Integer.parseInt(om.accuracy)))
+                            .orElse(nmapHost.os.osmatches.get(0)); // Corregido: osmatches
 
+                        if (bestMatch.osclasses != null && !bestMatch.osclasses.isEmpty()) {
+                            String collectedOsClassDetails = bestMatch.osclasses.stream() 
+                                .map(osc -> {
+                                    List<String> parts = new ArrayList<>();
+                                    if (osc.type != null && !osc.type.isEmpty()) parts.add(osc.type);
+                                    if (osc.vendor != null && !osc.vendor.isEmpty()) parts.add(osc.vendor);
+                                    if (osc.osfamily != null && !osc.osfamily.isEmpty()) parts.add(osc.osfamily);
+                                    if (osc.osgen != null && !osc.osgen.isEmpty()) parts.add(osc.osgen);
+                                    return String.join(" ", parts);
+                                })
+                                .filter(s -> !s.isEmpty())
+                                .collect(Collectors.joining(" | "));
+                            osDetails = bestMatch.name + (collectedOsClassDetails.isEmpty() ? "" : " (" + collectedOsClassDetails + ")");
+                        } else {
+                            osDetails = bestMatch.name; 
+                        }
+                    // La línea que causaba el error [296,48] "cannot find symbol: variable osMatches"
+                    // probablemente era una referencia incorrecta a nmapHost.os.osMatches en esta sección.
+                    // Asegúrate que todas las referencias a la lista de coincidencias de OS usen 'osmatches'.
+                    } else if (nmapHost.os != null && nmapHost.os.portused != null && !nmapHost.os.portused.isEmpty()) { 
+                        osDetails = "OS details inferred from ports: " + nmapHost.os.portused.size() + " ports used."; 
+                    }
+                    // Para el error en la línea 298: "cannot find symbol: method normalizeOsDetails(java.lang.String)"
+                    // Cambia normalizeOsDetails a normalizeString, o implementa normalizeOsDetails en DataNormalizer.
+                    device.setOs(dataNormalizer.normalizeString(osDetails)); // Opción 1: usar normalizeString
+                    // device.setOs(dataNormalizer.normalizeOsDetails(osDetails)); // Opción 2: si implementas el método
+                    device.setRiskLevel(RiskAnalyzer.calculateRiskLevel(device)); 
                     devices.add(device);
                 }
             } else {

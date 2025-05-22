@@ -1,0 +1,8 @@
+Reporte de Escaneo de Red
+Objetivo del Escaneo:,10.0.0.0/24
+Fecha del Escaneo:,2025-05-21 12:54:30 UTC
+Dispositivos Encontrados:,2
+
+IP,Hostname,MAC,Fabricante,OS,Puertos Abiertos,Servicios,Nivel de Riesgo,SNMP - Nombre Sistema,SNMP - Descripción,SNMP - Ubicación,SNMP - Contacto,SNMP - Tiempo Activo,SNMP - Interfaz Descripción,SNMP - Interfaz Velocidad,SNMP - Interfaz Estado
+"10.0.0.1","10.0.0.1","12:34:56:78:9A:BC","Desconocido","so desconocido","N/A","N/A","bajo","N/A","N/A","N/A","N/A","N/A","N/A","N/A","N/A"
+"10.0.0.4","practicacesar.internal.cloudapp.net","Desconocido","Formato MAC inválido","microsoft windows server 2019 (general purpose microsoft windows 2019)","135; 139; 445; 1433; 3389; 5985","5985:http (microsoft httpapi httpd 2.0 ssdp/upnp) | 135:msrpc (microsoft windows rpc) | 1433:tcpwrapped | 139:netbios-ssn (microsoft windows netbios-ssn) | 445:microsoft-ds | 3389:ms-wbt-server (microsoft terminal services)","alto","N/A","N/A","N/A","N/A","N/A","N/A","N/A","N/A"

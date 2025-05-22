@@ -29,7 +29,7 @@ public class CsvExporter {
             writer.println(); // Línea en blanco
 
             // Encabezados de la tabla de dispositivos
-            writer.println("IP,Hostname,MAC,Fabricante,OS,Puertos Abiertos,Servicios,Nivel de Riesgo");
+            writer.println("IP,Hostname,MAC,Fabricante,OS,Puertos Abiertos,Servicios,Nivel de Riesgo,SNMP - Nombre Sistema,SNMP - Descripción,SNMP - Ubicación,SNMP - Contacto,SNMP - Tiempo Activo,SNMP - Interfaz Descripción,SNMP - Interfaz Velocidad,SNMP - Interfaz Estado");
 
             if (report.getDevices() != null) {
                 for (Device device : report.getDevices()) {
@@ -55,8 +55,21 @@ public class CsvExporter {
                     
                     String riskLevel = device.getRiskLevel() != null ? device.getRiskLevel() : "N/A";
 
-                    writer.printf("\"%s\",\"%s\",\"%s\",\"%s\",\"%s\",\"%s\",\"%s\",\"%s\"%n",
-                            ip, hostname, mac, manufacturer, os, openPortsStr, servicesStr, riskLevel);
+                    // Obtener información SNMP
+                    Map<String, String> snmpInfo = device.getSnmpInfo();
+                    String systemName = snmpInfo.getOrDefault("systemName", "N/A");
+                    String systemDescription = snmpInfo.getOrDefault("systemDescription", "N/A");
+                    String systemLocation = snmpInfo.getOrDefault("systemLocation", "N/A");
+                    String systemContact = snmpInfo.getOrDefault("systemContact", "N/A");
+                    String systemUptime = snmpInfo.getOrDefault("systemUptime", "N/A");
+                    String interfaceDescription = snmpInfo.getOrDefault("interfaceDescription", "N/A");
+                    String interfaceSpeed = snmpInfo.getOrDefault("interfaceSpeed", "N/A");
+                    String interfaceStatus = snmpInfo.getOrDefault("interfaceStatus", "N/A");
+
+                    writer.printf("\"%s\",\"%s\",\"%s\",\"%s\",\"%s\",\"%s\",\"%s\",\"%s\",\"%s\",\"%s\",\"%s\",\"%s\",\"%s\",\"%s\",\"%s\",\"%s\"%n",
+                            ip, hostname, mac, manufacturer, os, openPortsStr, servicesStr, riskLevel,
+                            systemName, systemDescription, systemLocation, systemContact, systemUptime,
+                            interfaceDescription, interfaceSpeed, interfaceStatus);
                 }
             }
             System.out.println("Reporte CSV exportado exitosamente a: " + filePath);

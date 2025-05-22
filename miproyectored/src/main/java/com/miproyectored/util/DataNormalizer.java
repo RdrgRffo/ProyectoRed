@@ -10,7 +10,10 @@ import java.util.Map;
 
 public class DataNormalizer {
 
-    public static final String DEFAULT_UNKNOWN = "unknown"; // Cambiado a public static final
+    // Constante para valores desconocidos, ahora "Desconocido"
+    public static final String DEFAULT_UNKNOWN = "Desconocido"; // <--- Cambiado de private a public
+
+    // Formateador de fecha para mantener la consistencia
     private static final SimpleDateFormat DATE_FORMATTER = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss z", Locale.getDefault());
 
     /**

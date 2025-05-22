@@ -61,6 +61,7 @@ public class HtmlExporter {
                 writer.println("                    <th>Puertos Abiertos</th>");
                 writer.println("                    <th>Servicios</th>");
                 writer.println("                    <th>Nivel de Riesgo</th>");
+                writer.println("                    <th>Información SNMP</th>"); // Nueva columna para SNMP
                 writer.println("                </tr>");
                 writer.println("            </thead>");
                 writer.println("            <tbody>");
@@ -83,10 +84,23 @@ public class HtmlExporter {
                     if (device.getServices() != null && !device.getServices().isEmpty()) {
                         servicesStr = device.getServices().entrySet().stream()
                                             .map(entry -> "Puerto " + entry.getKey() + ": " + escapeHtml(entry.getValue()))
-                                            .collect(Collectors.joining("<br>"));
+                                            .collect(Collectors.joining("<br><br>"));
                     }
                     writer.println("                    <td>" + servicesStr + "</td>");
                     writer.println("                    <td>" + escapeHtml(device.getRiskLevel()) + "</td>");
+
+                    // Información SNMP en una celda
+                    Map<String, String> snmpInfo = device.getSnmpInfo();
+                    StringBuilder snmpHtml = new StringBuilder();
+                    if (snmpInfo != null && !snmpInfo.isEmpty()) {
+                        snmpInfo.forEach((key, value) -> {
+                            snmpHtml.append("<strong>").append(escapeHtml(key)).append(":</strong> ").append(escapeHtml(value)).append("<br>");
+                        });
+                    } else {
+                        snmpHtml.append("N/A");
+                    }
+                    writer.println("                    <td>" + snmpHtml.toString() + "</td>"); // Añadir la celda SNMP
+
                     writer.println("                </tr>");
                 }
                 writer.println("            </tbody>");
